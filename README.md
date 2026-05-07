@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Robert Garcia — Portfolio
 
 A pixel-perfect, dark-themed portfolio website built with the **MERN stack** and **Tailwind CSS**, matching the provided design reference.
@@ -202,3 +203,7 @@ The server will serve the React app from `client/dist` in production.
 ##  License
 
 MIT — free to use and customize for your own portfolio.
+=======
+# portfolio
+A personal portfolio website built to showcase my work, skills, and projects in web development. Developed using the MERN stack with responsive UI and optimized performance.
+>>>>>>> 37eecf4466bc7978a07b9e6e4d676c78c712abaa
