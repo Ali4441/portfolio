@@ -86,15 +86,17 @@ router.post(
 
       const contact = await Contact.create({ name, email, message, ipAddress });
 
-      console.log(contact);
-
-      // Fire-and-forget email notification
-      await sendEmailNotification(contact);
       res.status(201).json({
         success: true,
         message: "Thank you! Your message has been received.",
         id: contact._id,
       });
+
+
+      console.log(contact);
+
+      // Fire-and-forget email notification
+      await sendEmailNotification(contact);
 
     } catch (err) {
       console.error("Contact POST error:", err);
