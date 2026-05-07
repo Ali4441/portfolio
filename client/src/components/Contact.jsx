@@ -14,12 +14,24 @@ const Contact = () => {
     e.preventDefault();
     setStatus("loading");
     try {
-
-      await axios.post("/api/contact", form);
+      console.log("Submitting contact form:", form);
+      await axios.post("http://localhost:5000/api/contact", form);
       setStatus("success");
       setForm({ name: "", email: "", message: "" });
       setTimeout(() => setStatus("idle"), 4000);
-    } catch {
+    } catch (err) {
+
+
+
+      if (err.response) {
+        console.log("STATUS:", err.response.status);
+        console.log("DATA:", err.response.data);
+      }
+
+      if (err.message) {
+        console.log("MESSAGE:", err.message);
+      }
+
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }
@@ -31,6 +43,11 @@ const Contact = () => {
     { icon: <FiTwitter />, label: "Twitter", href: "https://twitter.com" },
     { icon: <FiMail />, label: "Email", href: "mailto:eedmohammad444@gmail.com" },
   ];
+
+
+
+
+
 
   return (
     <section className="py-20 px-6 max-w-6xl mx-auto" id="contact">

@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+
+ HEAD
 # Robert Garcia — Portfolio
 
 A pixel-perfect, dark-themed portfolio website built with the **MERN stack** and **Tailwind CSS**, matching the provided design reference.

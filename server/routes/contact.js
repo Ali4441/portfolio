@@ -23,7 +23,14 @@ const contactValidation = [
 
 // Optional: send email notification
 const sendEmailNotification = async (contact) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+  console.log("EMAIL_USER:", process.env.EMAIL_USER);
+  console.log("EMAIL_TO:", process.env.EMAIL_TO);
+  console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log("Email config missing");
+    return;
+  }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -78,16 +85,17 @@ router.post(
       const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
       const contact = await Contact.create({ name, email, message, ipAddress });
+
       console.log(contact);
 
       // Fire-and-forget email notification
-      sendEmailNotification(contact);
-
+      await sendEmailNotification(contact);
       res.status(201).json({
         success: true,
         message: "Thank you! Your message has been received.",
         id: contact._id,
       });
+
     } catch (err) {
       console.error("Contact POST error:", err);
       res.status(500).json({
@@ -97,6 +105,26 @@ router.post(
     }
   }
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // GET /api/contact — Get all messages (protected in production — add auth middleware)
 router.get("/",
@@ -110,6 +138,7 @@ router.get("/",
       res.status(500).json({ success: false, message: "Server error" });
     }
   });
+
 
 // PATCH /api/contact/:id — Update message status
 router.patch("/:id", async (req, res) => {
