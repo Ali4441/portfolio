@@ -41,7 +41,7 @@ const Contact = () => {
     { icon: <FiGithub />, href: "https://github.com/Ali4441" },
     { icon: <FiLinkedin />, label: "LinkedIn", href: "https://www.linkedin.com/in/eed-mohammad-427667298/" },
     { icon: <FiTwitter />, label: "Twitter", href: "https://twitter.com" },
-    { icon: <FiMail />, label: "Email", href: "mailto:eedmohammad444@gmail.com" },
+
   ];
 
 
