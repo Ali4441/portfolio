@@ -16,6 +16,7 @@ const Contact = () => {
     try {
       console.log("Submitting contact form:", form);
       // await axios.post("http://localhost:5000/api/contact", form);
+      console.log("API URL:", import.meta.env.VITE_API_URL);
       await axios.post(
         `${import.meta.env.VITE_API_URL}/api/contact`,
         form
