@@ -16,7 +16,10 @@ const Contact = () => {
     try {
       console.log("Submitting contact form:", form);
       // await axios.post("http://localhost:5000/api/contact", form);
-      await axios.post("https://portfolio-1mjx.onrender.com/api/contact", form);
+      await axios.post(
+        "https://portfolio-5va4.onrender.com/api/contact",
+        form
+      );
       setStatus("success");
       setForm({ name: "", email: "", message: "" });
       setTimeout(() => setStatus("idle"), 4000);
