@@ -18,6 +18,7 @@ const Contact = () => {
       // await axios.post("http://localhost:5000/api/contact", form);
       await axios.post(
         "https://portfolio-5va4.onrender.com/api/contact",
+
         form
       );
       setStatus("success");
