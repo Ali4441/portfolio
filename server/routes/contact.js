@@ -1,167 +1,207 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
 import Contact from "../models/Contact.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const router = express.Router();
 
-// Validation rules
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ─── Validation Rules ─────────────────────────────────────────────
 const contactValidation = [
   body("name")
     .trim()
-    .notEmpty().withMessage("Name is required")
-    .isLength({ max: 100 }).withMessage("Name is too long"),
+    .notEmpty()
+    .withMessage("Name is required")
+    .isLength({ max: 100 })
+    .withMessage("Name is too long"),
+
   body("email")
     .trim()
-    .isEmail().withMessage("Valid email is required")
+    .isEmail()
+    .withMessage("Valid email is required")
     .normalizeEmail(),
+
   body("message")
     .trim()
-    .notEmpty().withMessage("Message is required")
-    .isLength({ min: 10, max: 2000 }).withMessage("Message must be 10–2000 characters"),
+    .notEmpty()
+    .withMessage("Message is required")
+    .isLength({ min: 10, max: 2000 })
+    .withMessage("Message must be 10–2000 characters"),
 ];
 
-// Optional: send email notification
+// ─── Send Email Notification ──────────────────────────────────────
 const sendEmailNotification = async (contact) => {
-  console.log("EMAIL_USER:", process.env.EMAIL_USER);
-  console.log("EMAIL_TO:", process.env.EMAIL_TO);
-  console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log("Email config missing");
-    return;
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      family: 4,
-      requireTLS: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    if (!process.env.RESEND_API_KEY || !process.env.EMAIL_TO) {
+      console.log("Resend config missing");
+      return;
+    }
 
-    await transporter.sendMail({
-      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO || process.env.EMAIL_USER,
+    const response = await resend.emails.send({
+      from: "Portfolio <onboarding@resend.dev>",
+      to: process.env.EMAIL_TO,
       subject: `New Portfolio Contact from ${contact.name}`,
+
       html: `
-        <div style="font-family: sans-serif; max-width: 500px;">
-          <h2 style="color: #CBFF00; background: #0a0a0a; padding: 16px;">
-            New Message — Robert Garcia Portfolio
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+
+          <h2 style="
+            background:#0a0a0a;
+            color:#CBFF00;
+            padding:16px;
+            border-radius:8px;
+          ">
+            New Portfolio Message
           </h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 8px; color: #666; font-size: 12px;">Name</td>
-                <td style="padding: 8px; font-weight: bold;">${contact.name}</td></tr>
-            <tr><td style="padding: 8px; color: #666; font-size: 12px;">Email</td>
-                <td style="padding: 8px;">${contact.email}</td></tr>
-            <tr><td style="padding: 8px; color: #666; font-size: 12px; vertical-align: top;">Message</td>
-                <td style="padding: 8px; line-height: 1.6;">${contact.message}</td></tr>
-          </table>
+
+          <div style="
+            border:1px solid #e5e5e5;
+            border-radius:8px;
+            padding:20px;
+            margin-top:16px;
+          ">
+
+            <p>
+              <strong>Name:</strong><br/>
+              ${contact.name}
+            </p>
+
+            <p>
+              <strong>Email:</strong><br/>
+              ${contact.email}
+            </p>
+
+            <p>
+              <strong>Message:</strong><br/>
+              ${contact.message}
+            </p>
+
+          </div>
         </div>
       `,
     });
+
+    console.log("Email sent successfully:", response);
+
   } catch (err) {
     console.error("Email notification failed:", err.message);
-    // Don't throw — email failure shouldn't fail the API response
   }
 };
 
-// POST /api/contact — Submit contact form
-router.post(
-  "/",
-  contactValidation,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
-      });
-    }
+// ─── POST /api/contact ────────────────────────────────────────────
+router.post("/", contactValidation, async (req, res) => {
 
-    try {
-      const { name, email, message } = req.body;
-      const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const errors = validationResult(req);
 
-      const contact = await Contact.create({ name, email, message, ipAddress });
-
-      console.log(contact);
-
-      // Fire-and-forget email notification
-      await sendEmailNotification(contact);
-      res.status(201).json({
-        success: true,
-        message: "Thank you! Your message has been received.",
-        id: contact._id,
-      });
-
-
-
-    } catch (err) {
-      console.error("Contact POST error:", err);
-      res.status(500).json({
-        success: false,
-        message: "Server error. Please try again later.",
-      });
-    }
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array().map((e) => ({
+        field: e.path,
+        message: e.msg,
+      })),
+    });
   }
-);
 
+  try {
+    const { name, email, message } = req.body;
 
+    const ipAddress =
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress;
 
+    // Save to MongoDB
+    const contact = await Contact.create({
+      name,
+      email,
+      message,
+      ipAddress,
+      status: "new",
+    });
 
+    console.log("Contact saved:", contact);
 
+    // Send Email
+    await sendEmailNotification(contact);
 
+    return res.status(201).json({
+      success: true,
+      message: "Thank you! Your message has been received.",
+      id: contact._id,
+    });
 
+  } catch (err) {
 
+    console.error("Contact POST error:", err);
 
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+});
 
+// ─── GET /api/contact ─────────────────────────────────────────────
+router.get("/", async (req, res) => {
+  try {
 
+    const messages = await Contact.find()
+      .sort({ createdAt: -1 })
+      .select("-ipAddress");
 
+    return res.json({
+      success: true,
+      count: messages.length,
+      data: messages,
+    });
 
+  } catch (err) {
 
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
 
-
-
-
-
-
-
-// GET /api/contact — Get all messages (protected in production — add auth middleware)
-router.get("/",
-  async (req, res) => {
-    try {
-      const messages = await Contact.find()
-        .sort({ createdAt: -1 })
-        .select("-ipAddress");
-      res.json({ success: true, count: messages.length, data: messages });
-    } catch (err) {
-      res.status(500).json({ success: false, message: "Server error" });
-    }
-  });
-
-
-// PATCH /api/contact/:id — Update message status
+// ─── PATCH /api/contact/:id ───────────────────────────────────────
 router.patch("/:id", async (req, res) => {
   try {
+
     const { status } = req.body;
+
     if (!["new", "read", "replied"].includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
     }
+
     const contact = await Contact.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
     );
-    if (!contact) return res.status(404).json({ success: false, message: "Not found" });
-    res.json({ success: true, data: contact });
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: "Not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: contact,
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
