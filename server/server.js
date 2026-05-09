@@ -21,16 +21,13 @@ const PORT = process.env.PORT || 5000;
 // ─── Security Middleware ───────────────────────────────────────────────────
 app.use(helmet());
 
-app.use(helmet());
 
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://your-vercel-app.vercel.app"
-  ],
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
+
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
