@@ -31,90 +31,58 @@ const contactValidation = [
 ];
 
 // ─── Send Email Notification ──────────────────────────────────────
-// const sendEmailNotification = async (contact) => {
-//   try {
-//     if (!process.env.RESEND_API_KEY || !process.env.EMAIL_TO) {
-//       console.log("Resend config missing");
-//       return;
-//     }
 
-//     const response = await resend.emails.send({
-//       from: "Portfolio <onboarding@resend.dev>",
-//       to: process.env.EMAIL_TO,
-//       subject: `New Portfolio Contact from ${contact.name}`,
-
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-
-//           <h2 style="
-//             background:#0a0a0a;
-//             color:#CBFF00;
-//             padding:16px;
-//             border-radius:8px;
-//           ">
-//             New Portfolio Message
-//           </h2>
-
-//           <div style="
-//             border:1px solid #e5e5e5;
-//             border-radius:8px;
-//             padding:20px;
-//             margin-top:16px;
-//           ">
-
-//             <p>
-//               <strong>Name:</strong><br/>
-//               ${contact.name}
-//             </p>
-
-//             <p>
-//               <strong>Email:</strong><br/>
-//               ${contact.email}
-//             </p>
-
-//             <p>
-//               <strong>Message:</strong><br/>
-//               ${contact.message}
-//             </p>
-
-//           </div>
-//         </div>
-//       `,
-//     });
-
-//     console.log("Email sent successfully:", response);
-
-//   } catch (err) {
-//     console.error("Email notification failed:", err.message);
-//   }
-// };
 
 const sendEmailNotification = async (contact) => {
   try {
 
-    console.log("STEP 1");
-
     if (!process.env.RESEND_API_KEY || !process.env.EMAIL_TO) {
-      console.log("STEP 2 - Missing ENV");
       return;
     }
-
-    console.log("STEP 3 - Before resend");
 
     const response = await resend.emails.send({
       from: "Portfolio <onboarding@resend.dev>",
       to: process.env.EMAIL_TO,
       subject: `New Portfolio Contact from ${contact.name}`,
-      html: `<p>${contact.message}</p>`,
+      html: `
+         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+
+          <h2 style="
+            background:#0a0a0a;
+            color:#CBFF00;
+             padding:16px;
+            border-radius:8px;
+       ">
+             New Portfolio Message
+           </h2>
+
+           <div style="
+             border:1px solid #e5e5e5;
+             border-radius:8px;
+            padding:20px;
+           margin-top:16px;
+         ">
+
+           <p>
+               <strong>Name:</strong><br/>
+               ${contact.name}
+             </p>
+
+             <p>
+               <strong>Email:</strong><br/>
+               ${contact.email}
+             </p>
+
+             <p>
+               <strong>Message:</strong><br/>
+               ${contact.message}
+             </p>
+
+           </div>
+         </div>
+       `,
     });
-
-    console.log("STEP 4 - After resend");
-    console.log("RESEND RESPONSE:", response);
-
   } catch (err) {
-
-    console.log("STEP 5 - ERROR");
-
     console.error(err);
   }
 };
